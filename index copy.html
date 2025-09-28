@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Valoración LoL - Demo</title>
+  <style>
+    body{font-family:system-ui,Arial;background:#0f1724;color:#e6eef8;padding:28px}
+    .card{background:#0b1220;padding:18px;border-radius:8px;display:inline-block}
+    input{padding:8px;border-radius:6px;border:none}
+    button{padding:8px 12px;border-radius:6px;margin-left:8px}
+    .big{font-size:2rem;margin-top:8px}
+    .muted{opacity:0.8;font-size:0.9rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div>
+      <label>Nombre de invocador: <input id="name" placeholder="TuNickAqui"></label>
+      <button id="btn">Obtener valoración</button>
+    </div>
+    <div id="out" style="margin-top:12px"></div>
+    <div class="muted" style="margin-top:8px">Nota: la API key debe estar en el servidor (.env). No pegues la clave en este HTML.</div>
+  </div>
+
+  <script>
+    document.getElementById('btn').addEventListener('click', async ()=>{
+      const name = document.getElementById('name').value.trim();
+      const out = document.getElementById('out');
+      if(!name){ out.textContent = 'Escribe tu nombre de invocador'; return; }
+      out.textContent = 'Cargando...';
+      try{
+        const r = await fetch('/api/player/' + encodeURIComponent(name));
+        if(!r.ok){
+          const txt = await r.text();
+          out.textContent = 'Error: ' + txt;
+          return;
+        }
+        const data = await r.json();
+        out.innerHTML = `
+          <div><strong>${data.summoner.name}</strong> — Nivel ${data.summoner.level}</div>
+          <div class="big">Valoración: <strong>${data.rating}</strong>/100</div>
+          <div>Partidas analizadas: ${data.details.games} — Victorias: ${data.details.wins} (winrate ${(data.details.winRate*100).toFixed(1)}%)</div>
+          <div>Avg KDA: ${data.details.avgKDA} — Vision: ${data.details.avgVision} — CS: ${data.details.avgCS}</div>
+        `;
+      } catch(e){
+        out.textContent = 'Error: ' + e.message;
+      }
+    });
+  </script>
+</body>
+</html>
